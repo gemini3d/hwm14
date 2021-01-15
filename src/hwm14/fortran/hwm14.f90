@@ -1464,11 +1464,6 @@ subroutine findandopen(datafile,unitid)
         endif
     endif
 
-    if (havefile) then
-        return
-    else
-        print *,"Can not find file ",trim(datafile)
-        stop
-    endif
+    if (.not. havefile) error stop "Can not find file " // trim(datafile)
 
 end subroutine findandopen
