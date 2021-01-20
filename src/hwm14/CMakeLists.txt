@@ -11,6 +11,14 @@ project(HWM14
 
 enable_testing()
 
+# suppress large amounts of warnings with modern compilers
+include(CheckFortranCompilerFlag)
+check_fortran_compiler_flag(-w nowarn)
+set(hwm14_flags)
+if(nowarn)
+  set(hwm14_flags -w)
+endif()
+
 # manually create directory to avoid race condition for FetchContent
 # else can get INTERFACE_INCLUDE_DIRECTORIES not found error
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -18,6 +26,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include)
 add_library(hwm14 fortran/hwm14.f90)
 set_target_properties(hwm14 PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_include_directories(hwm14 INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_compile_options(hwm14 PRIVATE ${hwm14_flags})
 
 if(BUILD_TESTING)
   add_executable(hwm14test fortran/checkhwm14.f90)
