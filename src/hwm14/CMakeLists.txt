@@ -28,6 +28,11 @@ set_target_properties(hwm14 PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_
 target_include_directories(hwm14 INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_compile_options(hwm14 PRIVATE ${hwm14_flags})
 
+install(TARGETS hwm14
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
+
 if(BUILD_TESTING)
   add_executable(hwm14test fortran/checkhwm14.f90)
   target_link_libraries(hwm14test PRIVATE hwm14)
@@ -35,10 +40,10 @@ if(BUILD_TESTING)
   add_test(NAME HWM14 COMMAND $<TARGET_FILE:hwm14test> WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endif()
 
+return()
+# --- TODO: python driver
 find_package(Python REQUIRED)
 
 if(NOT Python_FOUND)
   return()
 endif()
-
-# --- TODO: python driver
