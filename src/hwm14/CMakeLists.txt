@@ -1,8 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "release or debug")
-endif()
+cmake_minimum_required(VERSION 3.14...3.21)
 
 project(HWM14
   LANGUAGES Fortran
@@ -19,19 +15,15 @@ if(nowarn)
   set(hwm14_flags -w)
 endif()
 
-# manually create directory to avoid race condition for FetchContent
-# else can get INTERFACE_INCLUDE_DIRECTORIES not found error
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include)
-
 add_library(hwm14 fortran/hwm14.f90)
 set_target_properties(hwm14 PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_include_directories(hwm14 INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_compile_options(hwm14 PRIVATE ${hwm14_flags})
 
-install(TARGETS hwm14
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
+install(TARGETS hwm14 EXPORT ${PROJECT_NAME}Targets)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+  TYPE INCLUDE
+  FILES_MATCHING PATTERN "*.mod")
 
 if(BUILD_TESTING)
   add_executable(hwm14test fortran/checkhwm14.f90)
