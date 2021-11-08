@@ -1,5 +1,8 @@
 # NRL HWM14 Horizontal Wind Model
 
+[![Actions Status](https://github.com/gemini3d/hwm14/workflows/ci/badge.svg)](https://github.com/gemini3d/hwm14/actions)
+
+
 Build "build/libhwm14.*" by:
 
 ```sh
