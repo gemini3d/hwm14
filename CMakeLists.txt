@@ -1,8 +1,12 @@
-cmake_minimum_required(VERSION 3.14...3.21)
+cmake_minimum_required(VERSION 3.14...3.22)
+
+file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION PROJECT_VERSION
+  REGEX "^([0-9]+\.[0-9]+\.[0-9]+)" LIMIT_INPUT 16 LENGTH_MAXIMUM 16 LIMIT_COUNT 1)
 
 project(HWM14
-  LANGUAGES Fortran
-  VERSION 1.0.0)
+LANGUAGES Fortran
+VERSION ${PROJECT_VERSION}
+)
 
 include(CTest)
 
