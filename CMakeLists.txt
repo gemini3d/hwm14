@@ -10,6 +10,8 @@ VERSION ${PROJECT_VERSION}
 
 include(CTest)
 
+include(cmake/options.cmake)
+
 # main library
 add_library(hwm14 src/hwm14.f90)
 set_target_properties(hwm14 PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include)
