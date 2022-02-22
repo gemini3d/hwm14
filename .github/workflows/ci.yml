@@ -3,6 +3,7 @@ name: ci
 env:
   CTEST_PARALLEL_LEVEL: 3
   CMAKE_BUILD_TYPE: Release
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 on:
   push:
@@ -15,35 +16,20 @@ on:
 
 jobs:
 
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
+  cmake:
+    strategy:
+      matrix:
+        image: [
+          {os: ubuntu-latest, gen: "Unix Makefiles", fc: gfortran},
+          {os: macos-latest, gen: "Unix Makefiles", fc: gfortran-11},
+          {os: windows-latest, gen: "MinGW Makefiles", fc: gfortran}
+        ]
 
-    - run: cmake -B build
-    - run: cmake --build build
-    - run: ctest --test-dir build -V
+    runs-on: ${{ matrix.image.os }}
 
-  macos:
-    needs: linux
-    runs-on: macos-latest
     env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      FC: gfortran-11
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - run: cmake -B build
-    - run: cmake --build build
-    - run: ctest --test-dir build -V
-
-
-  windows:
-    needs: linux
-    runs-on: windows-latest
-    env:
-      CMAKE_GENERATOR: "MinGW Makefiles"
+      CMAKE_GENERATOR: ${{ matrix.image.gen }}
+      FC: ${{ matrix.image.fc }}
 
     steps:
     - uses: actions/checkout@v2
