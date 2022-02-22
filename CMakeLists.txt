@@ -21,12 +21,20 @@ $<INSTALL_INTERFACE:include>
 # suppress large amounts of warnings with modern compilers
 target_compile_options(hwm14 PRIVATE -w)
 
+target_compile_definitions(hwm14 INTERFACE
+$<BUILD_INTERFACE:DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data/">
+$<INSTALL_INTERFACE:DATADIR="${CMAKE_INSTALL_PREFIX}/share/data/${PROJECT_NAME}/">
+)
+
+set(RESOURCE_FILES data/dwm07b104i.dat data/gd2qd.dat data/hwm123114.bin)
+
 install(TARGETS hwm14 EXPORT ${PROJECT_NAME}-targets)
+
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
 TYPE INCLUDE
 FILES_MATCHING PATTERN "*.mod"
 )
-install(FILES data/dwm07b104i.dat data/gd2qd.dat data/hwm123114.bin
+install(FILES ${RESOURCE_FILES}
 DESTINATION share/data/${PROJECT_NAME}
 )
 
