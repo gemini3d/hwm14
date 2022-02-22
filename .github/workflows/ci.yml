@@ -19,6 +19,7 @@ jobs:
   cmake:
     strategy:
       matrix:
+        shared: [true, false]
         image: [
           {os: ubuntu-latest, gen: "Unix Makefiles", fc: gfortran},
           {os: macos-latest, gen: "Unix Makefiles", fc: gfortran-11},
@@ -34,6 +35,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - run: cmake -B build
+    - run: cmake -B build -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
     - run: cmake --build build
     - run: ctest --test-dir build -V
