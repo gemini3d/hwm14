@@ -1,22 +1,10 @@
 # this enables CMake imported target HWM14::hwm14
 include(ExternalProject)
 
-if(NOT hwm14_external)
-  find_package(hwm14 CONFIG)
-
-  if(hwm14_FOUND)
-    message(STATUS "HWM14 found: ${hwm14_DIR}")
-    return()
-  endif()
-endif()
-
-set(hwm14_external TRUE CACHE BOOL "Build HWM14")
-
 set(hwm14_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include)
 
 if(BUILD_SHARED_LIBS)
   if(WIN32)
-    set(hwm14_IMPLIB ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}hwm14${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(hwm14_LIBRARIES ${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}hwm14${CMAKE_SHARED_LIBRARY_SUFFIX})
   else()
     set(hwm14_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}hwm14${CMAKE_SHARED_LIBRARY_SUFFIX})
