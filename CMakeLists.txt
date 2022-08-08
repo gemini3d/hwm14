@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...3.23)
+cmake_minimum_required(VERSION 3.11...3.23)
 
 file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION PROJECT_VERSION
   REGEX "^([0-9]+\.[0-9]+\.[0-9]+)" LIMIT_INPUT 16 LENGTH_MAXIMUM 16 LIMIT_COUNT 1)
@@ -28,10 +28,15 @@ $<INSTALL_INTERFACE:DATADIR="${CMAKE_INSTALL_PREFIX}/share/data/${PROJECT_NAME}/
 
 set(RESOURCE_FILES data/dwm07b104i.dat data/gd2qd.dat data/hwm123114.bin)
 
-install(TARGETS hwm14 EXPORT ${PROJECT_NAME}-targets)
+install(TARGETS hwm14 EXPORT ${PROJECT_NAME}-targets
+LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
-TYPE INCLUDE
+DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 FILES_MATCHING PATTERN "*.mod"
 )
 install(FILES ${RESOURCE_FILES}
@@ -46,19 +51,24 @@ $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 $<INSTALL_INTERFACE:include>
 )
 
-install(TARGETS hwm_ifc EXPORT ${PROJECT_NAME}-targets)
+install(TARGETS hwm_ifc EXPORT ${PROJECT_NAME}-targets
+LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/hwm_interface.mod
-TYPE INCLUDE
+DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 # --- tests
 
 if(BUILD_TESTING)
-  add_executable(hwm14check tests/checkhwm14.f90)
+  add_executable(hwm14check test/checkhwm14.f90)
   target_link_libraries(hwm14check PRIVATE hwm14)
   add_test(NAME HWM14check COMMAND hwm14check)
 
-  add_executable(hwm14test tests/test_hwm.f90)
+  add_executable(hwm14test test/test_hwm.f90)
   target_link_libraries(hwm14test PRIVATE hwm_ifc)
   add_test(NAME HWM14test COMMAND hwm14test)
 
