@@ -24,6 +24,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
+
+    - name: install gfortran
+      if: runner.os == 'macOS'
+      run: brew reinstall gcc
+
     - uses: actions/checkout@v3
 
     - name: Configure
