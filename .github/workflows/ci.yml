@@ -32,7 +32,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Configure
-      run: cmake -B build -DCMAKE_PREFIX_PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B build -DCMAKE_PREFIX_PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} --install-prefix=${{ runner.temp }}
 
     - name: Build
       run: cmake --build build
@@ -64,7 +64,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Configure
-      run: cmake -B build -DCMAKE_PREFIX_PATH=${{ runner.temp }}
+      run: cmake -B build -DCMAKE_PREFIX_PATH=${{ runner.temp }} --install-prefix=${{ runner.temp }}
 
     - name: Build
       run: cmake --build build
