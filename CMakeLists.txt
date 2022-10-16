@@ -1,16 +1,14 @@
-cmake_minimum_required(VERSION 3.11...3.23)
-
-file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/VERSION PROJECT_VERSION
-  REGEX "^([0-9]+\.[0-9]+\.[0-9]+)" LIMIT_INPUT 16 LENGTH_MAXIMUM 16 LIMIT_COUNT 1)
+cmake_minimum_required(VERSION 3.11...3.25)
 
 project(hwm14
 LANGUAGES Fortran
-VERSION ${PROJECT_VERSION}
+VERSION 1.2.3
 )
 
-include(CTest)
+enable_testing()
 
 include(cmake/options.cmake)
+include(cmake/compilers.cmake)
 
 # --- hwm14 library
 add_library(hwm14 src/hwm14.f90)
@@ -48,7 +46,7 @@ add_library(hwm_ifc src/hwm_interface.f90)
 target_link_libraries(hwm_ifc PRIVATE hwm14)
 target_include_directories(hwm_ifc PUBLIC
 $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-$<INSTALL_INTERFACE:include>
+$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 install(TARGETS hwm_ifc EXPORT ${PROJECT_NAME}-targets
@@ -72,10 +70,7 @@ if(BUILD_TESTING)
   target_link_libraries(hwm14test PRIVATE hwm_ifc)
   add_test(NAME HWM14test COMMAND hwm14test)
 
-  set_tests_properties(HWM14test HWM14check PROPERTIES
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data
-  TIMEOUT 5
-  )
+  set_property(TEST HWM14test HWM14check PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data)
 endif()
 
 include(cmake/install.cmake)
