@@ -237,7 +237,7 @@ module qwm
     logical                    :: content(5) = .true.          ! Season/Waves/Tides
     logical                    :: component(0:1) = .true.      ! Compute zonal/meridional
 
-    character(128)             :: qwmdefault = 'hwm123114.bin'
+    character(1024)             :: qwmdefault = 'hwm123114.bin'
     logical                    :: qwminit = .true.
 
     real(8)                    :: wavefactor(4) = 1.0
@@ -267,7 +267,7 @@ module dwm
     real(8), parameter         :: dtor=pi/180.d0
 
     logical                    :: dwminit = .true.
-    character(128), parameter  :: dwmdefault = 'dwm07b104i.dat'
+    character(14), parameter  :: dwmdefault = 'dwm07b104i.dat'
 
 end module dwm
 
@@ -330,31 +330,32 @@ subroutine initqwm(filename)
     use hwm,only:omaxhwm,nmaxhwm
     implicit none
 
-    character(128),intent(in)      :: filename
+    character(*),intent(in)      :: filename
     integer(4)                     :: i,j
     integer(4)                     :: ncomp
+    integer :: uid
 
     if (allocated(vnode)) then
         deallocate(order,nb,vnode,mparm,tparm)
         deallocate(fs,fm,fl,zwght,bz,bm)
     endif
 
-    call findandopen(filename,23)
-    read(23) nbf,maxs,maxm,maxl,maxn,ncomp
-    read(23) nlev,p
+    call findandopen(filename,uid)
+    read(uid) nbf,maxs,maxm,maxl,maxn,ncomp
+    read(uid) nlev,p
     nnode = nlev + p
     allocate(nb(0:nnode),order(ncomp,0:nnode),vnode(0:nnode))
-    read(23) vnode
+    read(uid) vnode
     vnode(3) = 0.0
     allocate(mparm(nbf,0:nlev))
     mparm = 0.0d0
     do i = 0,nlev-p+1-2
-        read(23) order(1:ncomp,i)
-        read(23) nb(i)
-        read(23) mparm(1:nbf,i)
+        read(uid) order(1:ncomp,i)
+        read(uid) nb(i)
+        read(uid) mparm(1:nbf,i)
     enddo
-    read(23) e1,e2
-    close(23)
+    read(uid) e1,e2
+    close(uid)
 
     ! Calculate the parity relationship permutations
 
@@ -913,16 +914,17 @@ subroutine initdwm(nmaxout,mmaxout)
     implicit none
 
     integer(4),intent(out)     :: nmaxout, mmaxout
+    integer :: uid
 
-    call findandopen(dwmdefault,23)
+    call findandopen(dwmdefault,uid)
     if (allocated(termarr)) deallocate(termarr,coeff)
-    read(23) nterm, mmax, nmax
+    read(uid) nterm, mmax, nmax
     allocate(termarr(0:2, 0:nterm-1))
-    read(23) termarr
+    read(uid) termarr
     allocate(coeff(0:nterm-1))
-    read(23) coeff
-    read(23) twidth
-    close(23)
+    read(uid) coeff
+    read(uid) twidth
+    close(uid)
 
     if (allocated(termval)) deallocate(termval,dpbar,dvbar,dwbar,mltterms,vshterms)
     nvshterm = ( ((nmax+1)*(nmax+2) - (nmax-mmax)*(nmax-mmax+1))/2 - 1 ) * 4 - 2*nmax
@@ -1168,18 +1170,19 @@ contains
         use hwm
         implicit none
 
-        character(128), parameter   :: datafile='gd2qd.dat'
+        character(9), parameter   :: datafile='gd2qd.dat'
         integer(4)                  :: iterm, n
         integer(4)                  :: j
+        integer :: uid
 
-        call findandopen(datafile,23)
-        read(23) nmax, mmax, nterm, epoch, alt
+        call findandopen(datafile,uid)
+        read(uid) nmax, mmax, nterm, epoch, alt
         if (allocated(coeff)) then
             deallocate(coeff,xcoeff,ycoeff,zcoeff,sh,shgradtheta,shgradphi,normadj)
         endif
         allocate( coeff(0:nterm-1, 0:2) )
-        read(23) coeff
-        close(23)
+        read(uid) coeff
+        close(uid)
 
         allocate( xcoeff(0:nterm-1) )
         allocate( ycoeff(0:nterm-1) )
@@ -1425,45 +1428,42 @@ end function latwgt2
 
 subroutine findandopen(datafile,unitid)
 
-    implicit none
+use, intrinsic :: iso_fortran_env, only : error_unit
 
-    character(128)      :: datafile
-    integer             :: unitid
-    character(128)      :: hwmpath
-    logical             :: havefile
-    integer             :: i
+implicit none
 
-    i = index(datafile,'bin')
-    if (i .eq. 0) then
-        inquire(file=trim(datafile),exist=havefile)
-        if (havefile) open(unit=unitid,file=trim(datafile),status='old',form='unformatted')
-        if (.not. havefile) then
-            call get_environment_variable('HWMPATH',hwmpath)
-            inquire(file=trim(hwmpath)//'/'//trim(datafile),exist=havefile)
-            if (havefile) open(unit=unitid, &
-                file=trim(hwmpath)//'/'//trim(datafile),status='old',form='unformatted')
-        endif
-        if (.not. havefile) then
-            inquire(file='../Meta/'//trim(datafile),exist=havefile)
-            if (havefile) open(unit=unitid, &
-                file='../Meta/'//trim(datafile),status='old',form='unformatted')
-        endif
-    else
-        inquire(file=trim(datafile),exist=havefile)
-        if (havefile) open(unit=unitid,file=trim(datafile),status='old',access='stream')
-        if (.not. havefile) then
-            call get_environment_variable('HWMPATH',hwmpath)
-            inquire(file=trim(hwmpath)//'/'//trim(datafile),exist=havefile)
-            if (havefile) open(unit=unitid, &
-                file=trim(hwmpath)//'/'//trim(datafile),status='old',access='stream')
-        endif
-        if (.not. havefile) then
-            inquire(file='../Meta/'//trim(datafile),exist=havefile)
-            if (havefile) open(unit=unitid, &
-                file='../Meta/'//trim(datafile),status='old',access='stream')
-        endif
-    endif
+character(*), intent(in) :: datafile
+integer, intent(out)  :: unitid
+character(1024)      :: hwmpath
+logical             :: havefile
+integer             :: i, L
 
-    if (.not. havefile) error stop "Can not find file " // trim(datafile)
+
+hwmpath = trim(datafile)
+inquire(file=hwmpath, exist=havefile)
+
+if(.not. havefile) then
+  call get_environment_variable('HWMPATH',hwmpath, length=L, status=i)
+  if(L > 0 .and. i == 0) then
+    hwmpath = trim(hwmpath)//'/'//trim(datafile)
+    inquire(file=hwmpath, exist=havefile)
+  endif
+endif
+
+if(.not. havefile) then
+  hwmpath = '../Meta/'//trim(datafile)
+  inquire(file=hwmpath, exist=havefile)
+endif
+
+if(.not. havefile) then
+  write(error_unit,'(a)') "ERROR:HWM14:findandopen: Can not find file " // trim(datafile)
+  error stop
+endif
+
+if(index(datafile, '.bin') == 0) then
+  open(newunit=unitid, file=trim(hwmpath), status='old', form='unformatted')
+else
+  open(newunit=unitid, file=trim(hwmpath), status='old', access='stream')
+endif
 
 end subroutine findandopen
