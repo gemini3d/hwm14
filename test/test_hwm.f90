@@ -14,14 +14,18 @@ real ::  &
 
 real :: Wmeridional, Wzonal, Dw(2)
 
-call hwm_14(day, utsec, alt_km, glat, glat, Ap, Wmeridional, Wzonal)
+call hwm_14(day, utsec, alt_km, glat, glon, Ap, Wmeridional, Wzonal)
 
-if (abs(Wmeridional - (-34.1767464)) > 0.001) error stop 'Wmeridional'
-if (abs(Wzonal - (-64.3156433)) > 0.001) error stop 'Wzonal'
+call dwm_07(day, utsec, alt_km, glat, glon, Ap, Dw)
 
-call dwm_07(day, utsec, alt_km, glat, glat, Ap, Dw)
-if (abs(DW(1)-(24.6438866)) > 0.001) error stop 'Dw(1)'
-if (abs(DW(2)-(-10.9287968)) > 0.001) error stop 'Dw(2)'
+print '(4a14)', "Wmeridional", "Wzonal", "Dw(1)", "Dw(2)"
+print '(4f14.6)', Wmeridional, Wzonal, Dw
+
+if (abs(Wmeridional - 51.259384) > 0.001) error stop "Wmeridional"
+if (abs(Wzonal - (-100.946259)) > 0.001) error stop 'Wzonal'
+
+if (abs(DW(1) - 44.557793) > 0.001) error stop 'Dw(1)'
+if (abs(DW(2) - (-18.965160)) > 0.001) error stop 'Dw(2)'
 
 print *, "OK: HWM14"
 
