@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.11...3.25)
 
 project(hwm14
 LANGUAGES Fortran
-VERSION 1.2.3
+VERSION 1.2.4
 )
 
 enable_testing()
