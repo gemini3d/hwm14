@@ -32,19 +32,19 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Configure
-      run: cmake -B build -DCMAKE_PREFIX_PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} --install-prefix=${{ runner.temp }}
+      run: cmake --preset default -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} --install-prefix=${{ runner.temp }}
 
     - name: Build
-      run: cmake --build build
+      run: cmake --build --preset default --parallel
 
     - name: Test
-      run: ctest --test-dir build -V
+      run: ctest --preset default
 
     - name: Install
       run: cmake --install build
 
   windows:
-    timeout-minutes: 20
+    timeout-minutes: 15
     runs-on: windows-latest
     env:
       CMAKE_GENERATOR: MinGW Makefiles
@@ -61,16 +61,7 @@ jobs:
     - name: Put MSYS2_MinGW64 on PATH
       run: echo "${{ runner.temp }}/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Configure
-      run: cmake -B build -DCMAKE_PREFIX_PATH=${{ runner.temp }} --install-prefix=${{ runner.temp }}
-
-    - name: Build
-      run: cmake --build build
-
-    - name: Test
-      run: ctest --test-dir build -V
-
-    - name: Install
-      run: cmake --install build
+      run: cmake --workflow --preset default
