@@ -14,9 +14,9 @@ real ::  &
 
 real :: Wmeridional, Wzonal, Dw(2)
 
-call hwm_14(day, utsec, alt_km, glat, glon, Ap, Wmeridional, Wzonal)
+call hwm_14(day, utsec, alt_km, glat, glon, Ap, Wmeridional, Wzonal, "share/data/hwm14")
 
-call dwm_07(day, utsec, alt_km, glat, glon, Ap, Dw)
+call dwm_07(day, utsec, alt_km, glat, glon, Ap, Dw, "share/data/hwm14")
 
 print '(4a14)', "Wmeridional", "Wzonal", "Dw(1)", "Dw(2)"
 print '(4f14.6)', Wmeridional, Wzonal, Dw
