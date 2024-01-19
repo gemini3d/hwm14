@@ -27,7 +27,6 @@ GIT_TAG ${hwm14_tag}
 CMAKE_ARGS ${hwm14_cmake_args}
 BUILD_BYPRODUCTS ${hwm14_LIBRARIES}
 TEST_COMMAND ""
-INACTIVITY_TIMEOUT 15
 CONFIGURE_HANDLED_BY_BUILD ON
 )
 
@@ -42,7 +41,7 @@ COMMAND ${CMAKE_COMMAND} -E copy_if_different ${hwm14_dat_files} $<TARGET_FILE_D
 install(FILES ${hwm14_dat_files} TYPE BIN)
 
 
-add_library(hwm14::hwm14 INTERFACE IMPORTED)
+add_library(hwm14::hwm14 INTERFACE IMPORTED GLOBAL)
 target_link_libraries(hwm14::hwm14 INTERFACE "${hwm14_LIBRARIES}")
 target_include_directories(hwm14::hwm14 INTERFACE ${hwm14_INCLUDE_DIRS})
 

@@ -2,6 +2,9 @@ name: ci
 
 env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
+  CTEST_NO_TESTS_ACTION: error
+  CMAKE_BUILD_PARALLEL_LEVEL: 4
+  CTEST_PARALLEL_LEVEL: 4
 
 on:
   push:
@@ -23,19 +26,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
 
+    env:
+      FC: gfortran-13
+
     steps:
 
-    - name: install gfortran
-      if: runner.os == 'macOS'
-      run: brew reinstall gcc
-
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Configure
       run: cmake --preset default -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} --install-prefix=${{ runner.temp }}
 
     - name: Build
-      run: cmake --build --preset default --parallel
+      run: cmake --build --preset default
 
     - name: Test
       run: ctest --preset default
@@ -61,7 +63,7 @@ jobs:
     - name: Put MSYS2_MinGW64 on PATH
       run: echo "${{ runner.temp }}/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Configure
       run: cmake --workflow --preset default
