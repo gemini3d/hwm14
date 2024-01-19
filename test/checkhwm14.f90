@@ -231,16 +231,18 @@ real(real32), parameter :: tol=1e-4
 real(real32), intent(in) :: x, perint(0:1)
 real(real32)            :: a, span, offset, offset1
 
+offset = 0
+offset1 = 0
 pershift = x
 a = perint(0)
 span = perint(1) - perint(0)
 if (span .ne. 0) then
   offset = x-a
   offset1 = mod(offset,span)
-  if (abs(offset1) .lt. tol) offset1 = 0
+  if (abs(offset1) < tol) offset1 = 0
 endif
 pershift = a + offset1
-if ((offset .lt. 0) .and. (offset1 .ne. 0)) pershift = pershift + span
+if ((offset < 0) .and. (offset1 /= 0)) pershift = pershift + span
 
 return
 
