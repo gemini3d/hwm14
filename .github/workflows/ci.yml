@@ -4,7 +4,7 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CTEST_NO_TESTS_ACTION: error
   CMAKE_BUILD_PARALLEL_LEVEL: 4
-  CTEST_PARALLEL_LEVEL: 4
+  CTEST_PARALLEL_LEVEL: 0
 
 on:
   push:
@@ -28,13 +28,14 @@ jobs:
 
     env:
       FC: gfortran-13
+      CMAKE_INSTALL_PREFIX: ~/libs
 
     steps:
 
     - uses: actions/checkout@v4
 
     - name: Configure
-      run: cmake --preset default -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} --install-prefix=${{ runner.temp }}
+      run: cmake --preset default -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: Build
       run: cmake --build --preset default
