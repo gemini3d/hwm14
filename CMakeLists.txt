@@ -17,7 +17,7 @@ VERSION 1.2.4
 
 enable_testing()
 
-include(cmake/options.cmake)
+include(options.cmake)
 include(cmake/compilers.cmake)
 
 file(GENERATE OUTPUT .gitignore CONTENT "*")
