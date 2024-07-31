@@ -72,7 +72,7 @@ target_link_libraries(hwm14::hwm_ifc INTERFACE hwm_ifc)
 
 # --- tests
 
-if(${PROJECT_NAME}_BUILD_TESTING)
+if(hwm14_BUILD_TESTING)
   add_executable(hwm14check test/checkhwm14.f90)
   target_link_libraries(hwm14check PRIVATE hwm14)
   add_test(NAME HWM14check COMMAND hwm14check)
