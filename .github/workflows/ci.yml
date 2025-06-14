@@ -14,6 +14,12 @@ on:
       - "**/CMakeLists.txt"
       - "**.cmake"
       - ".github/workflows/ci.yml"
+  workflow_dispatch:
+
+# avoid wasted runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
@@ -24,7 +30,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     env:
       CMAKE_INSTALL_PREFIX: ~/libs
@@ -55,7 +61,7 @@ jobs:
     env:
       CMAKE_GENERATOR: Ninja
 
-        # shared always error 135 even on only shared. not a problem on real pc.
+# shared always error 135 even on only shared. not a problem on real pc.
 
     steps:
     - uses: msys2/setup-msys2@v2
