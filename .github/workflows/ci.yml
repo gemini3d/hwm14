@@ -21,18 +21,21 @@ jobs:
     strategy:
       matrix:
         shared: [true, false]
-        os: [ubuntu-24.04, macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
 
     env:
-      FC: gfortran-13
       CMAKE_INSTALL_PREFIX: ~/libs
 
     steps:
 
     - uses: actions/checkout@v4
+
+    - name: set FC for macOS
+      if: runner.os == 'macOS'
+      run: echo "FC=gfortran-14" >> $GITHUB_ENV
 
     - name: Configure
       run: cmake --preset default -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
@@ -50,19 +53,20 @@ jobs:
     timeout-minutes: 15
     runs-on: windows-latest
     env:
-      CMAKE_GENERATOR: MinGW Makefiles
+      CMAKE_GENERATOR: Ninja
 
         # shared always error 135 even on only shared. not a problem on real pc.
 
     steps:
     - uses: msys2/setup-msys2@v2
+      id: msys2
       with:
         update: true
         install: >-
-          mingw-w64-x86_64-gcc-fortran
+          mingw-w64-ucrt-x86_64-gcc-fortran
 
     - name: Put MSYS2_MinGW64 on PATH
-      run: echo "${{ runner.temp }}/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      run: echo "${{ steps.msys2.outputs.msys2-location }}/ucrt64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - uses: actions/checkout@v4
 
