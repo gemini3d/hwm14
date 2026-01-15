@@ -3,7 +3,6 @@ name: ci
 env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CTEST_NO_TESTS_ACTION: error
-  CMAKE_BUILD_PARALLEL_LEVEL: 4
   CTEST_PARALLEL_LEVEL: 0
 
 on:
@@ -37,11 +36,12 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v4
+    - &checkout
+      uses: actions/checkout@v6
 
     - name: set FC for macOS
       if: runner.os == 'macOS'
-      run: echo "FC=gfortran-14" >> $GITHUB_ENV
+      run: echo "FC=gfortran-15" >> $GITHUB_ENV
 
     - name: Configure
       run: cmake --preset default -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
@@ -74,7 +74,7 @@ jobs:
     - name: Put MSYS2_MinGW64 on PATH
       run: echo "${{ steps.msys2.outputs.msys2-location }}/ucrt64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - uses: actions/checkout@v4
+    - *checkout
 
     - name: Configure
-      run: cmake --workflow --preset default
+      run: cmake --workflow default
