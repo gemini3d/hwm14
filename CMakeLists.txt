@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20...4.2)
+cmake_minimum_required(VERSION 3.20...4.3)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "please use out of source build
@@ -67,8 +67,7 @@ TYPE INCLUDE
 )
 
 
-add_library(hwm14::hwm_ifc INTERFACE IMPORTED GLOBAL)
-target_link_libraries(hwm14::hwm_ifc INTERFACE hwm_ifc)
+add_library(hwm14::hwm_ifc ALIAS hwm_ifc)
 
 # --- tests
 
