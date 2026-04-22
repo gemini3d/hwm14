@@ -26,8 +26,8 @@ jobs:
   unix:
     strategy:
       matrix:
-        shared: [true, false]
         os: [ubuntu-latest, macos-latest]
+        preset: [default, shared]
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
@@ -44,14 +44,8 @@ jobs:
       if: runner.os == 'macOS'
       run: echo "FC=gfortran-15" >> $GITHUB_ENV
 
-    - name: Configure
-      run: cmake --preset default -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-
-    - name: Build
-      run: cmake --build --preset default
-
-    - name: Test
-      run: ctest --preset default
+    - name: Build and Test
+      run: cmake --workflow ${{ matrix.preset }}
 
     - name: Install
       run: cmake --install build
