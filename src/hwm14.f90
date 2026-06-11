@@ -37,7 +37,14 @@
 !!!        w(2) = zonal wind (m/sec + eastward)
 !!!
 !!!================================================================================
+  
+module data_path                          
 
+    implicit none
+
+    character(1024) :: datapath_global = ''
+
+end module data_path
 
 module hwm
 
@@ -59,15 +66,21 @@ module hwm
 
 end module hwm
 
-subroutine hwm14(iyd,sec,alt,glat,glon,stl,f107a,f107,ap,w)
+subroutine hwm14(iyd,sec,alt,glat,glon,stl,f107a,f107,ap,w,path)
 
     use hwm
+    use data_path
     implicit none
     integer(4),intent(in)   :: iyd
     real(4),intent(in)      :: sec,alt,glat,glon,stl,f107a,f107
     real(4),intent(in)      :: ap(2)
     real(4),intent(out)     :: w(2)
     real(4)                 :: dw(2)
+    character(*), intent(in), optional :: path
+
+    if (present(path)) then
+        datapath_global = trim(path)
+    endif
 
     if (hwminit) call inithwm()
 
@@ -1429,6 +1442,7 @@ end function latwgt2
 subroutine findandopen(datafile,unitid)
 
 use, intrinsic :: iso_fortran_env, only : error_unit
+use data_path 
 
 implicit none
 
@@ -1438,9 +1452,17 @@ character(1024)      :: hwmpath
 logical             :: havefile
 integer             :: i, L
 
+havefile = .false.
 
-hwmpath = trim(datafile)
-inquire(file=hwmpath, exist=havefile)
+if(len_trim(datapath_global) > 0) then
+    hwmpath = trim(datapath_global)//'/'//trim(datafile)
+    inquire(file=hwmpath, exist=havefile)
+endif
+
+if(.not. havefile) then
+    hwmpath = trim(datafile)
+    inquire(file=hwmpath, exist=havefile)
+endif
 
 if(.not. havefile) then
   call get_environment_variable('HWMPATH',hwmpath, length=L, status=i)

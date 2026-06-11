@@ -5,8 +5,18 @@ use, intrinsic :: iso_fortran_env, only : real32, real64
 
 implicit none (type, external)
 
-external :: hwm14, dwm07
+interface
+    subroutine hwm14(iyd, sec, alt, glat, glon, stl, f107a, f107, ap, w, path)
+        import :: real32
+        integer, intent(in)                :: iyd
+        real(real32), intent(in)           :: sec, alt, glat, glon, stl, f107a, f107
+        real(real32), intent(in)           :: ap(2)
+        real(real32), intent(out)          :: w(2)
+        character(*), intent(in), optional :: path
+    end subroutine hwm14
+end interface
 
+external :: dwm07
 
 interface hwm_14
   procedure :: hwm_14_r64, hwm_14_r32
@@ -21,7 +31,7 @@ public :: hwm_14, dwm_07
 
 contains
 
-subroutine hwm_14_r64(dayOfYear, UTsec, alt_km, glat, glon, Ap, Wmeridional, Wzonal)
+subroutine hwm_14_r64(dayOfYear, UTsec, alt_km, glat, glon, Ap, Wmeridional, Wzonal, path)
 !! Parameters
 !! ----------
 !!
@@ -42,6 +52,7 @@ subroutine hwm_14_r64(dayOfYear, UTsec, alt_km, glat, glon, Ap, Wmeridional, Wzo
 integer, intent(in) :: dayOfYear
 real(real64), intent(in) :: UTsec, alt_km, glat, glon, Ap
 real(real64), intent(out) :: Wmeridional, Wzonal
+character(*), intent(in), optional :: path 
 
 real(real32) :: Ap2(2), W(2), dummy
 
@@ -49,7 +60,7 @@ Ap2(2) = real(Ap, real32)
 
 call hwm14(dayOfYear, real(UTsec, real32), &
   real(alt_km, real32), real(glat, real32), real(glon, real32), &
-  dummy, dummy, dummy, Ap2, W)
+  dummy, dummy, dummy, Ap2, W, path=path)
 
 Wmeridional = real(W(1), real64)
 Wzonal = real(W(2), real64)
@@ -57,7 +68,7 @@ Wzonal = real(W(2), real64)
 end subroutine hwm_14_r64
 
 
-subroutine hwm_14_r32(dayOfYear, UTsec, alt_km, glat, glon, Ap, Wmeridional, Wzonal)
+subroutine hwm_14_r32(dayOfYear, UTsec, alt_km, glat, glon, Ap, Wmeridional, Wzonal, path)
 !! Parameters
 !! ----------
 !!
@@ -78,12 +89,13 @@ subroutine hwm_14_r32(dayOfYear, UTsec, alt_km, glat, glon, Ap, Wmeridional, Wzo
 integer, intent(in) :: dayOfYear
 real(real32), intent(in) :: UTsec, alt_km, glat, glon, Ap
 real(real32), intent(out) :: Wmeridional, Wzonal
+character(*), intent(in), optional :: path
 
 real(real32) :: Ap2(2), dummy, W2(2)
 
 Ap2(2) = Ap
 
-call hwm14(dayOfYear, UTsec, alt_km, glat, glon, dummy, dummy, dummy, Ap2, W2)
+call hwm14(dayOfYear, UTsec, alt_km, glat, glon, dummy, dummy, dummy, Ap2, W2, path=path)          
 
 Wmeridional = W2(1)
 Wzonal = W2(2)
