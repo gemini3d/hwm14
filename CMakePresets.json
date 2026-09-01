@@ -4,6 +4,7 @@
 "configurePresets": [
 {
   "name": "default",
+  "generator": "Ninja",
   "binaryDir": "build",
   "installDir": "${fileDir}/build/local",
   "cacheVariables": {
@@ -45,6 +46,9 @@
       { "type": "test", "name": "default" }
     ]
   },
+  { "name": "build",
+    "steps": [ { "type": "configure", "name": "default" },
+    { "type": "build", "name": "default" } ] },
   {
     "name": "shared",
     "steps": [

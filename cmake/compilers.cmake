@@ -3,7 +3,7 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   -fimplicit-none
   )
   # $<$<CONFIG:Debug>:-fcheck=all>  fails in line 1246 array bounds error
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES "^Intel")
+elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "IntelLLVM")
   add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:-traceback;-warn>")
     #"$<$<CONFIG:Debug>:-check>" same as gfortran
 endif()
