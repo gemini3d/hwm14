@@ -1434,20 +1434,24 @@ implicit none
 
 character(*), intent(in) :: datafile
 integer, intent(out)  :: unitid
-character(1024)      :: hwmpath
+character(:), allocatable :: hwmpath
 logical             :: havefile
 integer             :: i, L
 
 
-hwmpath = trim(datafile)
-inquire(file=hwmpath, exist=havefile)
+inquire(file=datafile, exist=havefile)
 
 if(.not. havefile) then
-  call get_environment_variable('HWMPATH',hwmpath, length=L, status=i)
+  call get_environment_variable('HWMPATH', length=L, status=i)
   if(L > 0 .and. i == 0) then
-    hwmpath = trim(hwmpath)//'/'//trim(datafile)
-    inquire(file=hwmpath, exist=havefile)
+    allocate(character(len=L) :: hwmpath)
+    call get_environment_variable('HWMPATH', hwmpath, status=i)
+    if (i == 0) then
+      hwmpath = trim(hwmpath)//'/'//trim(datafile)
+      inquire(file=hwmpath, exist=havefile)
+    endif
   endif
+!   print '(A,1x,i0,a,i0)', "TRACE:hwm14:findandopen: HWMPATH=" // trim(hwmpath) // " DATAFILE=" // trim(datafile) // " L=", L, " i=", i
 endif
 
 if(.not. havefile) then
@@ -1456,14 +1460,14 @@ if(.not. havefile) then
 endif
 
 if(.not. havefile) then
-  write(error_unit,'(a)') "ERROR:HWM14:findandopen: Can not find file " // trim(datafile)
+  write(error_unit,'(a)') "ERROR:HWM14:findandopen: Can not find file " // datafile
   error stop
 endif
 
 if(index(datafile, '.bin') == 0) then
-  open(newunit=unitid, file=trim(hwmpath), status='old', form='unformatted')
+  open(newunit=unitid, file=hwmpath, status='old', form='unformatted')
 else
-  open(newunit=unitid, file=trim(hwmpath), status='old', access='stream')
+  open(newunit=unitid, file=hwmpath, status='old', access='stream')
 endif
 
 end subroutine findandopen

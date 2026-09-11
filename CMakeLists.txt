@@ -12,7 +12,7 @@ endif()
 
 project(hwm14
 LANGUAGES Fortran
-VERSION 1.2.5
+VERSION 1.2.6
 )
 
 enable_testing()
@@ -80,7 +80,7 @@ if(hwm14_BUILD_TESTING)
   target_link_libraries(hwm14test PRIVATE hwm14::hwm_ifc)
   add_test(NAME HWM14test COMMAND hwm14test)
 
-  set_property(TEST HWM14test HWM14check PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data)
+  set_property(TEST HWM14test HWM14check PROPERTY ENVIRONMENT "HWMPATH=${CMAKE_CURRENT_SOURCE_DIR}/data")
 endif()
 
 include(cmake/install.cmake)
