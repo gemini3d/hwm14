@@ -40,34 +40,82 @@
 
 
 module hwm
+    use, intrinsic :: iso_fortran_env, only : int32, real64
+    implicit none
 
-    integer(4)           :: nmaxhwm = 0        ! maximum degree hwmqt
-    integer(4)           :: omaxhwm = 0        ! maximum order hwmqt
-    integer(4)           :: nmaxdwm = 0        ! maximum degree hwmqt
-    integer(4)           :: mmaxdwm = 0        ! maximum order hwmqt
-    integer(4)           :: nmaxqdc = 0        ! maximum degree of coordinate coversion
-    integer(4)           :: mmaxqdc = 0        ! maximum order of coordinate coversion
-    integer(4)           :: nmaxgeo = 0        ! maximum of nmaxhwm, nmaxqd
-    integer(4)           :: mmaxgeo = 0        ! maximum of omaxhwm, nmaxqd
+    integer(int32)           :: nmaxhwm = 0        ! maximum degree hwmqt
+    integer(int32)           :: omaxhwm = 0        ! maximum order hwmqt
+    integer(int32)           :: nmaxdwm = 0        ! maximum degree hwmqt
+    integer(int32)           :: mmaxdwm = 0        ! maximum order hwmqt
+    integer(int32)           :: nmaxqdc = 0        ! maximum degree of coordinate coversion
+    integer(int32)           :: mmaxqdc = 0        ! maximum order of coordinate coversion
+    integer(int32)           :: nmaxgeo = 0        ! maximum of nmaxhwm, nmaxqd
+    integer(int32)           :: mmaxgeo = 0        ! maximum of omaxhwm, nmaxqd
 
-    real(8),allocatable  :: gpbar(:,:),gvbar(:,:),gwbar(:,:) ! alfs for geo coordinates
-    real(8),allocatable  :: spbar(:,:),svbar(:,:),swbar(:,:) ! alfs MLT calculation
+    real(real64),allocatable  :: gpbar(:,:),gvbar(:,:),gwbar(:,:) ! alfs for geo coordinates
+    real(real64),allocatable  :: spbar(:,:),svbar(:,:),swbar(:,:) ! alfs MLT calculation
 
-    real(8)              :: glatalf = -1.d32
+    real(real64)              :: glatalf = -1.d32
 
     logical              :: hwminit = .true.
+
+contains
+
+integer function findandopen(datafile) result (unitid)
+! Utility to find and open the supporting data files
+use, intrinsic :: iso_fortran_env, only : error_unit
+
+
+character(*), intent(in) :: datafile
+character(:), allocatable :: hwmpath
+logical             :: havefile
+integer             :: i, L
+
+
+inquire(file=datafile, exist=havefile)
+
+if(.not. havefile) then
+  call get_environment_variable('HWMPATH', length=L, status=i)
+  if(L > 0 .and. i == 0) then
+    allocate(character(len=L) :: hwmpath)
+    call get_environment_variable('HWMPATH', hwmpath, status=i)
+    if (i == 0) then
+      hwmpath = trim(hwmpath)//'/'//trim(datafile)
+      inquire(file=hwmpath, exist=havefile)
+    endif
+  endif
+!   print '(A,1x,i0,a,i0)', "TRACE:hwm14:findandopen: HWMPATH=" // trim(hwmpath) // " DATAFILE=" // trim(datafile) // " L=", L, " i=", i
+endif
+
+if(.not. havefile) then
+  hwmpath = '../Meta/'//trim(datafile)
+  inquire(file=hwmpath, exist=havefile)
+endif
+
+if(.not. havefile) then
+  write(error_unit,'(a)') "ERROR:HWM14:findandopen: Can not find file " // datafile
+  error stop
+endif
+
+if(index(datafile, '.bin') == 0) then
+  open(newunit=unitid, file=hwmpath, status='old', form='unformatted', action='read')
+else
+  open(newunit=unitid, file=hwmpath, status='old', access='stream', action='read')
+endif
+
+end function findandopen
 
 end module hwm
 
 subroutine hwm14(iyd,sec,alt,glat,glon,stl,f107a,f107,ap,w)
-
+    use, intrinsic :: iso_fortran_env, only : real32
     use hwm
     implicit none
-    integer(4),intent(in)   :: iyd
-    real(4),intent(in)      :: sec,alt,glat,glon,stl,f107a,f107
-    real(4),intent(in)      :: ap(2)
-    real(4),intent(out)     :: w(2)
-    real(4)                 :: dw(2)
+    integer(int32),intent(in)   :: iyd
+    real(real32),intent(in)      :: sec,alt,glat,glon,stl,f107a,f107
+    real(real32),intent(in)      :: ap(2)
+    real(real32),intent(out)     :: w(2)
+    real(real32)                 :: dw(2)
 
     if (hwminit) call inithwm()
 
@@ -87,16 +135,16 @@ end subroutine hwm14
 ! ################################################################################
 
 module alf
-
+    use, intrinsic :: iso_fortran_env, only : int32, real64
     implicit none
 
-    integer(4)              :: nmax0,mmax0
+    integer(int32)              :: nmax0,mmax0
 
     ! static normalizational coeffiecents
 
-    real(8), allocatable    :: anm(:,:),bnm(:,:),dnm(:,:)
-    real(8), allocatable    :: cm(:),en(:)
-    real(8), allocatable    :: marr(:),narr(:)
+    real(real64), allocatable    :: anm(:,:),bnm(:,:),dnm(:,:)
+    real(real64), allocatable    :: cm(:),en(:)
+    real(real64), allocatable    :: marr(:),narr(:)
 
 contains
 
@@ -105,18 +153,18 @@ contains
     ! -------------------------------------------------------------
 
     subroutine alfbasis(nmax,mmax,theta,P,V,W)
-
+        use, intrinsic :: iso_fortran_env, only : int32, int64, real64
         implicit none
 
-        integer(4), intent(in)  :: nmax, mmax
-        real(8), intent(in)     :: theta
-        real(8), intent(out)    :: P(0:nmax,0:mmax)
-        real(8), intent(out)    :: V(0:nmax,0:mmax)
-        real(8), intent(out)    :: W(0:nmax,0:mmax)
+        integer(int32), intent(in)  :: nmax, mmax
+        real(real64), intent(in)     :: theta
+        real(real64), intent(out)    :: P(0:nmax,0:mmax)
+        real(real64), intent(out)    :: V(0:nmax,0:mmax)
+        real(real64), intent(out)    :: W(0:nmax,0:mmax)
 
-        integer(8)              :: n, m
-        real(8)                 :: x, y
-        real(8), parameter      :: p00 = 0.70710678118654746d0
+        integer(int64)              :: n, m
+        real(real64)                 :: x, y
+        real(real64), parameter      :: p00 = 0.70710678118654746d0
 
         P(0,0) = p00
         x = dcos(theta)
@@ -150,11 +198,11 @@ contains
     ! -----------------------------------------------------
 
     subroutine initalf(nmaxin,mmaxin)
-
+        use, intrinsic :: iso_fortran_env, only : int32, int64
         implicit none
 
-        integer(4), intent(in) :: nmaxin, mmaxin
-        integer(8)             :: n, m   ! 64 bits to avoid overflow for (m,n) > 60
+        integer(int32), intent(in) :: nmaxin, mmaxin
+        integer(int64)             :: n, m   ! 64 bits to avoid overflow for (m,n) > 60
 
         nmax0 = nmaxin
         mmax0 = mmaxin
@@ -197,42 +245,43 @@ end module alf
 
 module qwm
 
+    use, intrinsic :: iso_fortran_env, only : int32, real64
     implicit none
 
-    integer(4)                 :: nbf              ! Count of basis terms per model level
-    integer(4)                 :: maxn             ! latitude
-    integer(4)                 :: maxs,maxm,maxl   ! seasonal,stationary,migrating
-    integer(4)                 :: maxo
+    integer(int32)                 :: nbf              ! Count of basis terms per model level
+    integer(int32)                 :: maxn             ! latitude
+    integer(int32)                 :: maxs,maxm,maxl   ! seasonal,stationary,migrating
+    integer(int32)                 :: maxo
 
-    integer(4)                 :: p                ! B-splines order, p=4 cubic, p=3 quadratic
-    integer(4)                 :: nlev             ! e.g. Number of B-spline nodes
-    integer(4)                 :: nnode            ! nlev + p
+    integer(int32)                 :: p                ! B-splines order, p=4 cubic, p=3 quadratic
+    integer(int32)                 :: nlev             ! e.g. Number of B-spline nodes
+    integer(int32)                 :: nnode            ! nlev + p
 
-    real(8)                    :: alttns           ! Transition 1
-    real(8)                    :: altsym           ! Transition 2
-    real(8)                    :: altiso           ! Constant Limit
-    real(8)                    :: e1(0:4)
-    real(8)                    :: e2(0:4)
-    real(8),parameter          :: H = 60.0d0
+    real(real64)                    :: alttns           ! Transition 1
+    real(real64)                    :: altsym           ! Transition 2
+    real(real64)                    :: altiso           ! Constant Limit
+    real(real64)                    :: e1(0:4)
+    real(real64)                    :: e2(0:4)
+    real(real64),parameter          :: H = 60.0d0
 
-    integer(4),allocatable     :: nb(:)            ! total number of basis functions @ level
-    integer(4),allocatable     :: order(:,:)       ! spectral content @ level
-    real(8),allocatable        :: vnode(:)         ! Vertical Altitude Nodes
-    real(8),allocatable        :: mparm(:,:)       ! Model Parameters
-    real(8),allocatable        :: tparm(:,:)       ! Model Parameters
+    integer(int32),allocatable     :: nb(:)            ! total number of basis functions @ level
+    integer(int32),allocatable     :: order(:,:)       ! spectral content @ level
+    real(real64),allocatable        :: vnode(:)         ! Vertical Altitude Nodes
+    real(real64),allocatable        :: mparm(:,:)       ! Model Parameters
+    real(real64),allocatable        :: tparm(:,:)       ! Model Parameters
 
-    real(8)                    :: previous(1:5) = -1.0d32
-    integer(4)                 :: priornb = 0
+    real(real64)                    :: previous(1:5) = -1.0d32
+    integer(int32)                 :: priornb = 0
 
-    real(8),allocatable        :: fs(:,:),fm(:,:),fl(:,:)
-    real(8),allocatable        :: bz(:),bm(:)
+    real(real64),allocatable        :: fs(:,:),fm(:,:),fl(:,:)
+    real(real64),allocatable        :: bz(:),bm(:)
 
-    real(8),allocatable        :: zwght(:)
-    integer(4)                 :: lev
+    real(real64),allocatable        :: zwght(:)
+    integer(int32)                 :: lev
 
-    integer(4)                 :: cseason = 0
-    integer(4)                 :: cwave = 0
-    integer(4)                 :: ctide = 0
+    integer(int32)                 :: cseason = 0
+    integer(int32)                 :: cwave = 0
+    integer(int32)                 :: ctide = 0
 
     logical                    :: content(5) = .true.          ! Season/Waves/Tides
     logical                    :: component(0:1) = .true.      ! Compute zonal/meridional
@@ -240,31 +289,31 @@ module qwm
     character(1024)             :: qwmdefault = 'hwm123114.bin'
     logical                    :: qwminit = .true.
 
-    real(8)                    :: wavefactor(4) = 1.0
-    real(8)                    :: tidefactor(4) = 1.0
+    real(real64)                    :: wavefactor(4) = 1.0
+    real(real64)                    :: tidefactor(4) = 1.0
 
 end module qwm
 
 module dwm
-
+    use, intrinsic :: iso_fortran_env, only : int32, real32, real64
     implicit none
 
-    integer(4)                 :: nterm             ! Number of terms in the model
-    integer(4)                 :: nmax,mmax         ! Max latitudinal degree
-    integer(4)                 :: nvshterm          ! # of VSH basis functions
+    integer(int32)                 :: nterm             ! Number of terms in the model
+    integer(int32)                 :: nmax,mmax         ! Max latitudinal degree
+    integer(int32)                 :: nvshterm          ! # of VSH basis functions
 
-    integer(4),allocatable     :: termarr(:,:)      ! 3 x nterm index of coupled terms
-    real(4),allocatable        :: coeff(:)          ! Model coefficients
-    real(4),allocatable        :: vshterms(:,:)     ! VSH basis values
-    real(4),allocatable        :: termval(:,:)      ! Term values to which coefficients are applied
-    real(8),allocatable        :: dpbar(:,:)        ! Associated lengendre fns
-    real(8),allocatable        :: dvbar(:,:)
-    real(8),allocatable        :: dwbar(:,:)
-    real(8),allocatable        :: mltterms(:,:)     ! MLT Fourier terms
-    real(4)                    :: twidth            ! Transition width of high-lat mask
+    integer(int32),allocatable     :: termarr(:,:)      ! 3 x nterm index of coupled terms
+    real(real32),allocatable        :: coeff(:)          ! Model coefficients
+    real(real32),allocatable        :: vshterms(:,:)     ! VSH basis values
+    real(real32),allocatable        :: termval(:,:)      ! Term values to which coefficients are applied
+    real(real64),allocatable        :: dpbar(:,:)        ! Associated lengendre fns
+    real(real64),allocatable        :: dvbar(:,:)
+    real(real64),allocatable        :: dwbar(:,:)
+    real(real64),allocatable        :: mltterms(:,:)     ! MLT Fourier terms
+    real(real32)                    :: twidth            ! Transition width of high-lat mask
 
-    real(8), parameter         :: pi=3.1415926535897932
-    real(8), parameter         :: dtor=pi/180.d0
+    real(real64), parameter         :: pi=4*atan(1.0)
+    real(real64), parameter         :: dtor=pi/180.0d0
 
     logical                    :: dwminit = .true.
     character(14), parameter  :: dwmdefault = 'dwm07b104i.dat'
@@ -279,7 +328,7 @@ subroutine inithwm()
     use alf,only:initalf
     implicit none
 
-    integer(4)           :: nmax0, mmax0
+    integer(int32)           :: nmax0, mmax0
 
     call initqwm(qwmdefault)
     call initdwm(nmaxdwm, mmaxdwm)
@@ -327,12 +376,12 @@ end subroutine inithwm
 subroutine initqwm(filename)
 
     use qwm
-    use hwm,only:omaxhwm,nmaxhwm
+    use hwm,only:omaxhwm,nmaxhwm, findandopen
     implicit none
 
     character(*),intent(in)      :: filename
-    integer(4)                     :: i,j
-    integer(4)                     :: ncomp
+    integer(int32)                     :: i,j
+    integer(int32)                     :: ncomp
     integer :: uid
 
     if (allocated(vnode)) then
@@ -340,7 +389,7 @@ subroutine initqwm(filename)
         deallocate(fs,fm,fl,zwght,bz,bm)
     endif
 
-    call findandopen(filename,uid)
+    uid = findandopen(filename)
     read(uid) nbf,maxs,maxm,maxl,maxn,ncomp
     read(uid) nlev,p
     nnode = nlev + p
@@ -389,24 +438,22 @@ subroutine initqwm(filename)
     qwminit = .false.
     qwmdefault = filename
 
-    return
-
 contains
 
     subroutine parity(order,nb,mparm,tparm)
 
         implicit none
 
-        integer(4),intent(in)     :: order(8)
-        integer(4),intent(in)     :: nb
-        real(8),intent(inout)     :: mparm(nb)
-        real(8),intent(out)       :: tparm(nb)
+        integer(int32),intent(in)     :: order(8)
+        integer(int32),intent(in)     :: nb
+        real(real64),intent(inout)     :: mparm(nb)
+        real(real64),intent(out)       :: tparm(nb)
 
-        integer(4)                :: c,m,n,s,l
+        integer(int32)                :: c,m,n,s,l
 
-        integer(4)                :: amaxs,amaxn
-        integer(4)                :: pmaxm,pmaxs,pmaxn
-        integer(4)                :: tmaxl,tmaxs,tmaxn
+        integer(int32)                :: amaxs,amaxn
+        integer(int32)                :: pmaxm,pmaxs,pmaxn
+        integer(int32)                :: tmaxl,tmaxs,tmaxn
 
         amaxs = order(1)
         amaxn = order(2)
@@ -495,39 +542,40 @@ end subroutine initqwm
 ! ------------------------------------------------------------
 
 subroutine hwmqt(IYD,SEC,ALT,GLAT,GLON,STL,F107A,F107,AP,W)
-
+    use, intrinsic :: iso_fortran_env, only : int32, real32, real64
     use hwm
+    use dwm, only : pi
     use qwm
     use alf,only:alfbasis
     implicit none
 
     integer,intent(in)      :: IYD
-    real(4),intent(in)      :: SEC,ALT,GLAT,GLON,STL,F107A,F107
-    real(4),intent(in)      :: AP(2)
-    real(4),intent(out)     :: W(2)
+    real(real32),intent(in)      :: SEC,ALT,GLAT,GLON,STL,F107A,F107
+    real(real32),intent(in)      :: AP(2)
+    real(real32),intent(out)     :: W(2)
 
     ! Local variables
 
-    real(8)                 :: input(5)
-    real(8)                 :: u,v
+    real(real64)                 :: input(5)
+    real(real64)                 :: u,v
 
-    real(8)                 :: cs,ss,cm,sm,cl,sl
-    real(8)                 :: cmcs,smcs,cmss,smss
-    real(8)                 :: clcs,slcs,clss,slss
-    real(8)                 :: AA,BB,CC,DD
-    real(8)                 :: vb,wb
-    real(8)                 :: theta,sc
+    real(real64)                 :: cs,ss,cm,sm,cl,sl
+    real(real64)                 :: cmcs,smcs,cmss,smss
+    real(real64)                 :: clcs,slcs,clss,slss
+    real(real64)                 :: AA,BB,CC,DD
+    real(real64)                 :: vb,wb
+    real(real64)                 :: theta,sc
 
-    integer(4)              :: b,c,d,m,n,s,l
+    integer(int32)              :: b,c,d,m,n,s,l
 
-    integer(4)              :: amaxs,amaxn
-    integer(4)              :: pmaxm,pmaxs,pmaxn
-    integer(4)              :: tmaxl,tmaxs,tmaxn
+    integer(int32)              :: amaxs,amaxn
+    integer(int32)              :: pmaxm,pmaxs,pmaxn
+    integer(int32)              :: tmaxl,tmaxs,tmaxn
 
     logical                 :: refresh(5)
 
-    real(8),parameter       :: twoPi = 2.0d0*3.1415926535897932384626433832795d0
-    real(8),parameter       :: deg2rad = twoPi/360.0d0
+    real(real64),parameter       :: twoPi = 2*pi
+    real(real64),parameter       :: deg2rad = twoPi/360.0d0
 
     ! ====================================================================
     ! Update VSH model terms based on any change in the input parameters
@@ -759,15 +807,15 @@ end subroutine hwmqt
 
 
 subroutine vertwght(alt,wght,iz)
-
+    use, intrinsic :: iso_fortran_env, only : int32, real64
     use qwm
     implicit none
 
-    real(8),intent(in)      :: alt
-    real(8),intent(out)     :: wght(4)
-    integer(4),intent(out)  :: iz
+    real(real64),intent(in)      :: alt
+    real(real64),intent(out)     :: wght(4)
+    integer(int32),intent(out)  :: iz
 
-    real(8)             :: we(0:4)
+    real(real64)             :: we(0:4)
 
     iz = findspan(nnode-p-1_4,p,alt,vnode) - p
 
@@ -804,16 +852,16 @@ contains
 
         implicit none
 
-        real(8)     :: bspline
-        integer(4)  :: p,m
-        real(8)     :: V(0:m)
-        integer(4)  :: i
-        real(8)     :: u
+        real(real64)     :: bspline
+        integer(int32)  :: p,m
+        real(real64)     :: V(0:m)
+        integer(int32)  :: i
+        real(real64)     :: u
 
-        real(8)     :: N(0:p+1)
-        real(8)     :: Vleft,Vright
-        real(8)     :: saved,temp
-        integer(4)  :: j,k
+        real(real64)     :: N(0:p+1)
+        real(real64)     :: Vleft,Vright
+        real(real64)     :: saved,temp
+        integer(int32)  :: j,k
 
         if ((i .eq. 0) .and. (u .eq. V(0))) then
             bspline = 1.d0
@@ -869,14 +917,14 @@ contains
     ! Function to locate the knot span
     ! =====================================================
 
-    integer(4) function findspan(n,p,u,V)
+    integer(int32) function findspan(n,p,u,V)
 
         implicit none
 
-        integer(4),intent(in)   :: n,p
-        real(8),intent(in)      :: u
-        real(8),intent(in)      :: V(0:n+1)
-        integer(4)              :: low,mid,high
+        integer(int32),intent(in)   :: n,p
+        real(real64),intent(in)      :: u
+        real(real64),intent(in)      :: V(0:n+1)
+        integer(int32)              :: low,mid,high
 
         if (u .ge. V(n+1)) then
             findspan = n
@@ -913,10 +961,10 @@ subroutine initdwm(nmaxout,mmaxout)
     use dwm
     implicit none
 
-    integer(4),intent(out)     :: nmaxout, mmaxout
+    integer(int32),intent(out)     :: nmaxout, mmaxout
     integer :: uid
 
-    call findandopen(dwmdefault,uid)
+    uid = findandopen(dwmdefault)
     if (allocated(termarr)) deallocate(termarr,coeff)
     read(uid) nterm, mmax, nmax
     allocate(termarr(0:2, 0:nterm-1))
@@ -946,24 +994,24 @@ subroutine initdwm(nmaxout,mmaxout)
 end subroutine initdwm
 
 subroutine dwm07(IYD,SEC,ALT,GLAT,GLON,AP,DW)
-
+    use, intrinsic :: iso_fortran_env, only : real32
     use hwm
     use dwm
     implicit none
 
     INTEGER,intent(in)      :: IYD
-    REAL(4),intent(in)      :: SEC,ALT,GLAT,GLON
-    REAL(4),intent(in)      :: AP(2)
-    REAL(4),intent(out)     :: DW(2)
+    real(real32),intent(in)      :: SEC,ALT,GLAT,GLON
+    real(real32),intent(in)      :: AP(2)
+    real(real32),intent(out)     :: DW(2)
 
-    real(4), save           :: day, ut, mlat, mlon, mlt, kp
-    real(4)                 :: mmpwind, mzpwind
-    real(4), save           :: f1e, f1n, f2e, f2n
-    real(4), save           :: glatlast=1.0e16, glonlast=1.0e16
-    real(4), save           :: daylast=1.0e16, utlast=1.0e16, aplast=1.0e16
-    real(4), parameter      :: talt=125.0 !, twidth=5.0
+    real(real32), save           :: day, ut, mlat, mlon, mlt, kp
+    real(real32)                 :: mmpwind, mzpwind
+    real(real32), save           :: f1e, f1n, f2e, f2n
+    real(real32), save           :: glatlast=1.0e16, glonlast=1.0e16
+    real(real32), save           :: daylast=1.0e16, utlast=1.0e16, aplast=1.0e16
+    real(real32), parameter      :: talt=125.0 !, twidth=5.0
 
-    real(4), external       :: ap2kp, mltcalc
+    real(real32), external       :: ap2kp, mltcalc
 
     !CONVERT AP TO KP
     if (ap(2) .ne. aplast) then
@@ -1004,28 +1052,28 @@ subroutine dwm07(IYD,SEC,ALT,GLAT,GLON,AP,DW)
 end subroutine dwm07
 
 subroutine dwm07b(mlt, mlat, kp, mmpwind, mzpwind)
-
+    use, intrinsic :: iso_fortran_env, only : real32, real64
     use hwm
     use dwm
     use alf,only:alfbasis
     implicit none
 
-    real(4),intent(in)        :: mlt       !Magnetic local time (hours)
-    real(4),intent(in)        :: mlat      !Magnetic latitude (degrees)
-    real(4),intent(in)        :: kp        !3-hour Kp
+    real(real32),intent(in)        :: mlt       !Magnetic local time (hours)
+    real(real32),intent(in)        :: mlat      !Magnetic latitude (degrees)
+    real(real32),intent(in)        :: kp        !3-hour Kp
 
-    real(4),intent(out)       :: mmpwind   !Mer. disturbance wind (+north, QD coordinates)
-    real(4),intent(out)       :: mzpwind   !Zon. disturbance wind (+east, QD coordinates)
+    real(real32),intent(out)       :: mmpwind   !Mer. disturbance wind (+north, QD coordinates)
+    real(real32),intent(out)       :: mzpwind   !Zon. disturbance wind (+east, QD coordinates)
 
     ! Local variables
-    integer(4)                :: iterm, ivshterm, n, m
-    real(4)                   :: termvaltemp(0:1)
-    real(4),save              :: kpterms(0:2)
-    real(4)                   :: latwgtterm
-    real(4),save              :: mltlast=1.e16, mlatlast=1.e16, kplast=1.e16
-    real(8)                   :: theta, phi, mphi
+    integer(int32)                :: iterm, ivshterm, n, m
+    real(real32)                   :: termvaltemp(0:1)
+    real(real32),save              :: kpterms(0:2)
+    real(real32)                   :: latwgtterm
+    real(real32),save              :: mltlast=1.e16, mlatlast=1.e16, kplast=1.e16
+    real(real64)                   :: theta, phi, mphi
 
-    real(4),external          :: latwgt2
+    real(real32),external          :: latwgt2
 
     !LOAD MODEL PARAMETERS IF NECESSARY
     if (dwminit) call initdwm(nmaxdwm, mmaxdwm)
@@ -1104,15 +1152,15 @@ end subroutine dwm07b
 !=================================================================================
 
 function ap2kp(ap0)
-
-  real(4), parameter :: apgrid(0:27) = (/0.,2.,3.,4.,5.,6.,7.,9.,12.,15.,18., &
+  use, intrinsic :: iso_fortran_env, only : int32, real32
+  real(real32), parameter :: apgrid(0:27) = (/0.,2.,3.,4.,5.,6.,7.,9.,12.,15.,18., &
                                          22.,27.,32.,39.,48.,56.,67.,80.,94., &
                                        111.,132.,154.,179.,207.,236.,300.,400./)
-  real(4), parameter :: kpgrid(0:27) = (/0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11., &
+  real(real32), parameter :: kpgrid(0:27) = (/0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11., &
                                          12.,13.,14.,15.,16.,17.,18.,19.,20.,21., &
                                          22.,23.,24.,25.,26.,27./) / 3.0
-  real(4)            :: ap0, ap, ap2kp
-  integer(4)         :: i
+  real(real32)            :: ap0, ap, ap2kp
+  integer(int32)         :: i
 
 
   ap = ap0
@@ -1142,40 +1190,37 @@ end function ap2kp
 ! ########################################################################
 
 module gd2qdc
-
+    use, intrinsic :: iso_fortran_env, only : real32, real64, int32
     implicit none
 
-    integer(4)               :: nterm, nmax, mmax  !Spherical harmonic expansion parameters
+    integer(int32)               :: nterm, nmax, mmax  !Spherical harmonic expansion parameters
 
-    real(8), allocatable     :: coeff(:,:)         !Coefficients for spherical harmonic expansion
-    real(8), allocatable     :: xcoeff(:)          !Coefficients for x coordinate
-    real(8), allocatable     :: ycoeff(:)          !Coefficients for y coordinate
-    real(8), allocatable     :: zcoeff(:)          !Coefficients for z coordinate
-    real(8), allocatable     :: sh(:)              !Array to hold spherical harmonic fuctions
-    real(8), allocatable     :: shgradtheta(:)     !Array to hold spherical harmonic gradients
-    real(8), allocatable     :: shgradphi(:)       !Array to hold spherical harmonic gradients
-    real(8), allocatable     :: normadj(:)         !Adjustment to VSH normalization factor
-    real(4)                  :: epoch, alt
+    real(real64), allocatable     :: coeff(:,:)         !Coefficients for spherical harmonic expansion
+    real(real64), allocatable     :: xcoeff(:)          !Coefficients for x coordinate
+    real(real64), allocatable     :: ycoeff(:)          !Coefficients for y coordinate
+    real(real64), allocatable     :: zcoeff(:)          !Coefficients for z coordinate
+    real(real64), allocatable     :: sh(:)              !Array to hold spherical harmonic fuctions
+    real(real64), allocatable     :: shgradtheta(:)     !Array to hold spherical harmonic gradients
+    real(real64), allocatable     :: shgradphi(:)       !Array to hold spherical harmonic gradients
+    real(real64), allocatable     :: normadj(:)         !Adjustment to VSH normalization factor
+    real(real32)                  :: epoch, alt
 
-    real(8), parameter       :: pi = 3.1415926535897932d0
-    real(8), parameter       :: dtor = pi/180.0d0
-    real(8), parameter       :: sineps = 0.39781868d0
+    real(real64), parameter       :: sineps = 0.39781868d0
 
     logical                  :: gd2qdinit = .true.
 
 contains
 
     subroutine initgd2qd()
-
+        use, intrinsic :: iso_fortran_env, only : int32
         use hwm
         implicit none
 
         character(9), parameter   :: datafile='gd2qd.dat'
-        integer(4)                  :: iterm, n
-        integer(4)                  :: j
+        integer(int32)                  :: iterm, n
         integer :: uid
 
-        call findandopen(datafile,uid)
+        uid = findandopen(datafile)
         read(uid) nmax, mmax, nterm, epoch, alt
         if (allocated(coeff)) then
             deallocate(coeff,xcoeff,ycoeff,zcoeff,sh,shgradtheta,shgradphi,normadj)
@@ -1214,25 +1259,26 @@ contains
 end module gd2qdc
 
 subroutine gd2qd(glatin,glon,qlat,qlon,f1e,f1n,f2e,f2n)
-
+    use, intrinsic :: iso_fortran_env, only : real32, real64, int32
+    use dwm, only : dtor
     use hwm
     use gd2qdc
     use alf
 
     implicit none
 
-    real(4), intent(in)         :: glatin, glon
-    real(4), intent(out)        :: qlat, qlon
-    real(4), intent(out)        :: f1e, f1n, f2e, f2n
+    real(real32), intent(in)         :: glatin, glon
+    real(real32), intent(out)        :: qlat, qlon
+    real(real32), intent(out)        :: f1e, f1n, f2e, f2n
 
-    integer(4)               :: n, m, i
-    real(8)                  :: glat, theta, phi
-    real(8)                  :: mphi, cosmphi, sinmphi
-    real(8)                  :: x, y, z
-    real(8)                  :: cosqlat, cosqlon, sinqlon
-    real(8)                  :: xgradtheta, ygradtheta, zgradtheta
-    real(8)                  :: xgradphi, ygradphi, zgradphi
-    real(8)                  :: qlonrad
+    integer(int32)               :: n, m, i
+    real(real64)                  :: glat, theta, phi
+    real(real64)                  :: mphi, cosmphi, sinmphi
+    real(real64)                  :: x, y, z
+    real(real64)                  :: cosqlat, cosqlon, sinqlon
+    real(real64)                  :: xgradtheta, ygradtheta, zgradtheta
+    real(real64)                  :: xgradphi, ygradphi, zgradphi
+    real(real64)                  :: qlonrad
 
    if (gd2qdinit) call initgd2qd()
 
@@ -1291,8 +1337,6 @@ subroutine gd2qd(glatin,glon,qlat,qlon,f1e,f1n,f2e,f2n)
     f2e = sngl( ygradtheta*cosqlon - xgradtheta*sinqlon )
     f2n = sngl( ygradphi*cosqlon   - xgradphi*sinqlon )
 
-    return
-
 end subroutine gd2qd
 
 !==================================================================================
@@ -1300,23 +1344,23 @@ end subroutine gd2qd
 !==================================================================================
 
 function mltcalc(qlat,qlon,day,ut)
-
+    use, intrinsic :: iso_fortran_env, only : real32, real64, int32
+    use dwm, only : dtor
     use hwm
     use gd2qdc
     use alf
 
     implicit none
 
-    real(4), intent(in)      :: qlat, qlon, day, ut
-    real(4)                  :: mltcalc
+    real(real32), intent(in)      :: qlat, qlon, day, ut
+    real(real32)                  :: mltcalc
 
-    integer(4)               :: n, m, i
-    real(8)                  :: asunglat, asunglon, asunqlon
-    real(8)                  :: glat, theta, phi
-    real(8)                  :: mphi, cosmphi, sinmphi
-    real(8)                  :: x, y
-    real(8)                  :: cosqlat, cosqlon, sinqlon
-    real(8)                  :: qlonrad
+    integer(int32)               :: n, m, i
+    real(real64)                  :: asunglat, asunglon, asunqlon
+    real(real64)                  :: theta, phi
+    real(real64)                  :: mphi, cosmphi, sinmphi
+    real(real64)                  :: x, y
+
 
     if (gd2qdinit) call initgd2qd()
 
@@ -1359,15 +1403,15 @@ end function mltcalc
 !================================================================================
 
 subroutine kpspl3(kp, kpterms)
-
+    use, intrinsic :: iso_fortran_env, only : real32,  int32
     implicit none
 
-    real(4), intent(in)       :: kp
-    real(4), intent(out)      :: kpterms(0:2)
+    real(real32), intent(in)       :: kp
+    real(real32), intent(out)      :: kpterms(0:2)
 
-    integer(4)                :: i, j
-    real(4)                   :: x, kpspl(0:6)
-    real(4), parameter        :: node(0:7)=(/-10., -8., 0., 2., 5., 8., 18., 20./)
+    integer(int32)                :: i, j
+    real(real32)                   :: x, kpspl(0:6)
+    real(real32), parameter        :: node(0:7)=(/-10., -8., 0., 2., 5., 8., 18., 20./)
 
     x = max(kp, 0.0)
     x = min(x,  8.0)
@@ -1397,19 +1441,19 @@ end subroutine kpspl3
 
 function latwgt2(mlat, mlt, kp0, twidth)
 
+    use, intrinsic :: iso_fortran_env, only : real32
+    use dwm, only : dtor
     implicit none
 
-    real(4)                   :: latwgt2
-    real(4)                   :: mlat, mlt, kp0, kp, twidth
-    real(4)                   :: mltrad, sinmlt, cosmlt, tlat
+    real(real32)                   :: latwgt2
+    real(real32)                   :: mlat, mlt, kp0, kp, twidth
+    real(real32)                   :: mltrad, sinmlt, cosmlt, tlat
 
-    real(4), parameter :: coeff(0:5) = (/ 65.7633,  -4.60256,  -3.53915,  &
+    real(real32), parameter :: coeff(0:5) = (/ 65.7633,  -4.60256,  -3.53915,  &
                                          -1.99971,  -0.752193,  0.972388 /)
 
-    real(4), parameter :: pi=3.141592653590
-    real(4), parameter :: dtor=pi/180.d0
 
-    mltrad = mlt * 15.0 * dtor
+    mltrad = mlt * 15.0 * real(dtor, kind=real32)
     sinmlt = sin(mltrad)
     cosmlt = cos(mltrad)
     kp = max(kp0, 0.0)
@@ -1421,53 +1465,3 @@ function latwgt2(mlat, mlt, kp0, twidth)
     return
 
 end function latwgt2
-
-! ========================================================================
-! Utility to find and open the supporting data files
-! ========================================================================
-
-subroutine findandopen(datafile,unitid)
-
-use, intrinsic :: iso_fortran_env, only : error_unit
-
-implicit none
-
-character(*), intent(in) :: datafile
-integer, intent(out)  :: unitid
-character(:), allocatable :: hwmpath
-logical             :: havefile
-integer             :: i, L
-
-
-inquire(file=datafile, exist=havefile)
-
-if(.not. havefile) then
-  call get_environment_variable('HWMPATH', length=L, status=i)
-  if(L > 0 .and. i == 0) then
-    allocate(character(len=L) :: hwmpath)
-    call get_environment_variable('HWMPATH', hwmpath, status=i)
-    if (i == 0) then
-      hwmpath = trim(hwmpath)//'/'//trim(datafile)
-      inquire(file=hwmpath, exist=havefile)
-    endif
-  endif
-!   print '(A,1x,i0,a,i0)', "TRACE:hwm14:findandopen: HWMPATH=" // trim(hwmpath) // " DATAFILE=" // trim(datafile) // " L=", L, " i=", i
-endif
-
-if(.not. havefile) then
-  hwmpath = '../Meta/'//trim(datafile)
-  inquire(file=hwmpath, exist=havefile)
-endif
-
-if(.not. havefile) then
-  write(error_unit,'(a)') "ERROR:HWM14:findandopen: Can not find file " // datafile
-  error stop
-endif
-
-if(index(datafile, '.bin') == 0) then
-  open(newunit=unitid, file=hwmpath, status='old', form='unformatted')
-else
-  open(newunit=unitid, file=hwmpath, status='old', access='stream')
-endif
-
-end subroutine findandopen
