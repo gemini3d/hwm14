@@ -71,20 +71,23 @@ character(:), allocatable :: hwmpath
 logical             :: havefile
 integer             :: i, L
 
+logical, parameter :: trace = .false.
 
 inquire(file=datafile, exist=havefile)
+if (havefile) hwmpath = trim(datafile)
 
 if(.not. havefile) then
   call get_environment_variable('HWMPATH', length=L, status=i)
   if(L > 0 .and. i == 0) then
     allocate(character(len=L) :: hwmpath)
+    if(trace) print '(a,1x,i0,a,1x,i0)', "TRACE:hwm14:findandopen: HWMPATH allocated length L=", L, " i=", i
+
     call get_environment_variable('HWMPATH', hwmpath, status=i)
     if (i == 0) then
       hwmpath = trim(hwmpath)//'/'//trim(datafile)
       inquire(file=hwmpath, exist=havefile)
     endif
   endif
-!   print '(A,1x,i0,a,i0)', "TRACE:hwm14:findandopen: HWMPATH=" // trim(hwmpath) // " DATAFILE=" // trim(datafile) // " L=", L, " i=", i
 endif
 
 if(.not. havefile) then
@@ -97,11 +100,20 @@ if(.not. havefile) then
   error stop
 endif
 
+if (trace) print '(a)', "TRACE:hwm14:findandopen: Attempting to open file " // hwmpath
+
 if(index(datafile, '.bin') == 0) then
-  open(newunit=unitid, file=hwmpath, status='old', form='unformatted', action='read')
+  open(newunit=unitid, file=hwmpath, status='old', form='unformatted', action='read', iostat=i)
 else
-  open(newunit=unitid, file=hwmpath, status='old', access='stream', action='read')
+  open(newunit=unitid, file=hwmpath, status='old', access='stream', action='read', iostat=i)
 endif
+
+if (i /= 0) then
+  write(error_unit,'(a,1x,i0)') "ERROR:HWM14:findandopen: Failed to open file " // hwmpath // " iostat=", i
+  error stop
+endif
+
+if (trace) print '(a)', "TRACE:hwm14:findandopen: Successfully opened file " // hwmpath
 
 end function findandopen
 
