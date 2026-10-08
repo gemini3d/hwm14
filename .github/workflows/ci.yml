@@ -1,8 +1,5 @@
 name: ci
 
-env:
-  HOMEBREW_NO_INSTALL_CLEANUP: 1
-
 on:
   push:
     paths:
@@ -12,6 +9,7 @@ on:
       - "**.cmake"
       - ".github/workflows/ci.yml"
   workflow_dispatch:
+  pull_request:
 
 # avoid wasted runs
 concurrency:

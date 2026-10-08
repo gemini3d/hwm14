@@ -27,6 +27,6 @@ if (abs(Wzonal - (-100.946259)) > 0.001) error stop 'Wzonal'
 if (abs(DW(1) - 44.557793) > 0.001) error stop 'Dw(1)'
 if (abs(DW(2) - (-18.965160)) > 0.001) error stop 'Dw(2)'
 
-print *, "OK: HWM14"
+print '(a)', "OK: HWM14"
 
 end program

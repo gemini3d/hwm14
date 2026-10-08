@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20...4.5)
+cmake_minimum_required(VERSION 3.21...4.5)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "please use out of source build
@@ -94,6 +94,15 @@ if(hwm14_BUILD_TESTING)
   add_test(NAME HWM14test COMMAND hwm14test)
 
   set_property(TEST HWM14test HWM14check PROPERTY ENVIRONMENT "HWMPATH=${CMAKE_CURRENT_SOURCE_DIR}/data")
+
+  add_test(NAME HWM14_noenv COMMAND hwm14test)
+  set_property(TEST HWM14_noenv PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data)
+
+  add_test(NAME HWM14test_noenv_fail COMMAND hwm14check)
+  set_tests_properties(HWM14test_noenv_fail PROPERTIES
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  WILL_FAIL TRUE
+  )
 endif()
 
 include(cmake/install.cmake)
